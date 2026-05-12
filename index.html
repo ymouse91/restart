@@ -1,0 +1,1843 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#c8380a">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-title" content="Restart">
+<title>Restart</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap');
+
+  :root {
+    --bg: #1a0f05;
+    --surface: #2d1a08;
+    --surface2: #3d2510;
+    --orange: #e8540f;
+    --orange-light: #ff7a35;
+    --orange-dark: #c8380a;
+    --gold: #f5c842;
+    --text: #fff8ef;
+    --text-dim: #c8a882;
+    --red: #e53030;
+    --green: #2db83a;
+    --blue: #2a7fdd;
+    --black-tile: #1a1a1a;
+    --tile-shadow: 0 4px 0 rgba(0,0,0,0.5);
+    --radius: 10px;
+    --hand-bg: rgba(45,26,8,0.95);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Nunito', sans-serif;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    background-image:
+      radial-gradient(ellipse at 20% 20%, rgba(232,84,15,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(200,56,10,0.06) 0%, transparent 50%);
+  }
+
+  /* ─── SCREENS ─── */
+  .screen { display: none; min-height: 100dvh; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* ─── SETUP SCREEN ─── */
+  #setup-screen {
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+    gap: 24px;
+  }
+
+  .logo {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(52px, 14vw, 96px);
+    color: var(--gold);
+    text-shadow: 0 4px 0 var(--orange-dark), 0 8px 20px rgba(245,200,66,0.3);
+    letter-spacing: -2px;
+    line-height: 1;
+    text-align: center;
+  }
+
+  .logo span {
+    color: var(--orange-light);
+    display: block;
+    font-size: 0.35em;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    text-shadow: none;
+    opacity: 0.9;
+  }
+
+  .setup-card {
+    background: var(--surface);
+    border: 2px solid rgba(232,84,15,0.3);
+    border-radius: 20px;
+    padding: 24px;
+    width: 100%;
+    max-width: 420px;
+  }
+
+  .setup-card h2 {
+    font-family: 'Fredoka One', cursive;
+    color: var(--gold);
+    font-size: 22px;
+    margin-bottom: 16px;
+  }
+
+  .player-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    background: var(--surface2);
+    border-radius: 12px;
+    border: 1.5px solid transparent;
+    transition: border-color 0.2s;
+  }
+  .player-row:focus-within { border-color: var(--orange); }
+
+  .player-num {
+    font-family: 'Fredoka One', cursive;
+    font-size: 20px;
+    color: var(--orange-light);
+    width: 28px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .player-row input[type="text"] {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'Nunito', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .player-row input::placeholder { color: var(--text-dim); font-weight: 400; }
+
+  .ai-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--text-dim);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .ai-toggle input { accent-color: var(--orange); }
+  .ai-badge {
+    background: var(--orange-dark);
+    color: var(--gold);
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 6px;
+    letter-spacing: 0.5px;
+    display: none;
+  }
+  .ai-active .ai-badge { display: inline; }
+  .ai-active input[type="text"] { color: var(--text-dim); }
+
+  .count-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .count-row label { font-weight: 700; color: var(--text-dim); font-size: 14px; }
+
+  .counter {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .counter button {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 2px solid var(--orange);
+    background: transparent;
+    color: var(--orange);
+    font-size: 22px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    line-height: 1;
+    transition: background 0.15s;
+  }
+  .counter button:hover { background: rgba(232,84,15,0.2); }
+  .counter .count-val {
+    font-family: 'Fredoka One', cursive;
+    font-size: 28px;
+    color: var(--gold);
+    width: 32px;
+    text-align: center;
+  }
+
+  .btn-primary {
+    width: 100%;
+    padding: 16px;
+    border-radius: 16px;
+    border: none;
+    background: linear-gradient(135deg, var(--orange), var(--orange-dark));
+    color: var(--text);
+    font-family: 'Fredoka One', cursive;
+    font-size: 22px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 var(--orange-dark), 0 8px 20px rgba(232,84,15,0.3);
+    transition: transform 0.1s, box-shadow 0.1s;
+    letter-spacing: 0.5px;
+  }
+  .btn-primary:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--orange-dark); }
+
+  /* ─── GAME SCREEN ─── */
+  #game-screen {
+    flex-direction: column;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .game-header {
+    background: var(--surface);
+    border-bottom: 2px solid rgba(232,84,15,0.25);
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    gap: 8px;
+  }
+
+  .header-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 24px;
+    color: var(--gold);
+    letter-spacing: -0.5px;
+  }
+
+  .score-chips {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    flex: 1;
+  }
+
+  .score-chip {
+    background: var(--surface2);
+    border-radius: 10px;
+    padding: 4px 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    border: 2px solid transparent;
+    transition: border-color 0.2s;
+  }
+  .score-chip.current { border-color: var(--gold); }
+  .score-chip .chip-name { color: var(--text-dim); }
+  .score-chip .chip-pts { color: var(--gold); font-family: 'Fredoka One', cursive; font-size: 15px; }
+  .score-chip .ai-icon { font-size: 11px; color: var(--orange); }
+
+  .btn-icon {
+    background: var(--surface2);
+    border: none;
+    border-radius: 10px;
+    color: var(--text-dim);
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 18px;
+    transition: color 0.15s;
+  }
+  .btn-icon:hover { color: var(--text); }
+
+  /* ─── BOARD ─── */
+  .board-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .row-container {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 58px;
+  }
+
+  .row-label {
+    width: 42px;
+    min-width: 42px;
+    flex-shrink: 0;
+    font-family: 'Fredoka One', cursive;
+    font-size: 15px;
+    text-align: left;
+    opacity: 0.7;
+    overflow: visible;
+    white-space: nowrap;
+  }
+
+  .tile-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+    flex: 1;
+  }
+
+  /* ─── TILES ─── */
+  .tile {
+    width: 48px; height: 48px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Fredoka One', cursive;
+    font-size: 18px;
+    position: relative;
+    box-shadow: var(--tile-shadow);
+    cursor: default;
+    user-select: none;
+    flex-shrink: 0;
+    transition: transform 0.15s, box-shadow 0.15s;
+    border: 2px solid rgba(255,255,255,0.1);
+  }
+
+  .tile.small {
+    width: 40px; height: 40px;
+    font-size: 15px;
+    border-radius: 8px;
+  }
+
+  .tile.tiny {
+    width: 34px; height: 34px;
+    font-size: 13px;
+    border-radius: 7px;
+  }
+
+  .tile-red    { background: linear-gradient(135deg, #e84040, #c01818); color: #fff; }
+  .tile-green  { background: linear-gradient(135deg, #35c44a, #1a8f2a); color: #fff; }
+  .tile-blue   { background: linear-gradient(135deg, #3a8fe8, #1a5ab8); color: #fff; }
+  .tile-orange { background: linear-gradient(135deg, #f08020, #c85808); color: #fff; }
+  .tile-black  { background: linear-gradient(135deg, #555, #1a1a1a); color: #fff; }
+  .tile-purple { background: linear-gradient(135deg, #9966cc, #6633aa); color: #fff; }
+
+  .tile-fin {
+    font-size: 12px;
+    letter-spacing: -0.5px;
+  }
+  .tile-restart {
+    font-size: 10px;
+    letter-spacing: -0.5px;
+  }
+  .tile-scissors {
+    background: linear-gradient(135deg, #bb88ee, #8844cc);
+    color: #fff;
+    font-size: 22px;
+  }
+  .tile-trash {
+    background: linear-gradient(135deg, #bb88ee, #8844cc);
+    color: #fff;
+    font-size: 20px;
+  }
+
+  .tile .tile-val { line-height: 1; }
+  .tile .tile-sub { font-size: 9px; opacity: 0.8; font-family: 'Nunito', sans-serif; font-weight: 800; line-height: 1; }
+
+  /* Selectable tiles in hand */
+  .tile.selectable {
+    cursor: pointer;
+  }
+  .tile.selectable:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 0 rgba(0,0,0,0.5);
+  }
+  .tile.selected {
+    transform: translateY(-6px);
+    box-shadow: 0 8px 0 rgba(0,0,0,0.5), 0 0 0 3px var(--gold);
+  }
+  .tile.selectable.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .tile.selectable.disabled:hover {
+    transform: none;
+    box-shadow: var(--tile-shadow);
+  }
+
+  /* Row target highlight */
+  .row-container.valid-target .tile-row {
+    background: rgba(245,200,66,0.1);
+    border-radius: 8px;
+    padding: 4px;
+    margin: -4px;
+  }
+  .row-container.valid-target {
+    cursor: pointer;
+  }
+
+  .row-play-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 2px solid var(--gold);
+    background: rgba(245,200,66,0.15);
+    color: var(--gold);
+    font-size: 20px;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .row-container.valid-target .row-play-btn {
+    display: flex;
+  }
+  .row-play-btn:hover { background: rgba(245,200,66,0.3); }
+
+  /* Closed row */
+  .row-closed .tile-row {
+    opacity: 0.6;
+  }
+  .closed-badge {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--text-dim);
+    background: var(--surface2);
+    padding: 2px 8px;
+    border-radius: 6px;
+    flex-shrink: 0;
+  }
+
+  /* ─── DIVIDER ─── */
+  .board-hand-divider {
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(232,84,15,0.4), transparent);
+    flex-shrink: 0;
+    margin: 0 8px;
+  }
+
+  /* ─── HAND AREA ─── */
+  .hand-area {
+    background: var(--hand-bg);
+    border-top: 2px solid rgba(232,84,15,0.25);
+    padding: 8px 10px 12px;
+    flex-shrink: 0;
+    max-height: 42dvh;
+    overflow-y: auto;
+  }
+
+  .hand-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .current-player-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .current-player-label .name {
+    font-family: 'Fredoka One', cursive;
+    font-size: 20px;
+    color: var(--gold);
+  }
+  .current-player-label .tile-count {
+    font-size: 13px;
+    color: var(--text-dim);
+    font-weight: 700;
+  }
+
+  .action-btns {
+    display: flex;
+    gap: 6px;
+  }
+
+  .btn-pass {
+    padding: 8px 18px;
+    border-radius: 10px;
+    border: 2px solid var(--text-dim);
+    background: transparent;
+    color: var(--text-dim);
+    font-family: 'Fredoka One', cursive;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-pass:hover { border-color: var(--text); color: var(--text); }
+
+  .btn-play {
+    padding: 8px 18px;
+    border-radius: 10px;
+    border: none;
+    background: linear-gradient(135deg, var(--gold), #e8a800);
+    color: #1a0f05;
+    font-family: 'Fredoka One', cursive;
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 0 3px 0 #a07000;
+    transition: transform 0.1s;
+    display: none;
+  }
+  .btn-play.visible { display: block; }
+  .btn-play:active { transform: translateY(2px); }
+
+
+
+  /* ─── HAND PRIVACY COVER ─── */
+  .hand-area.hand-hidden .hand-header {
+    display: none;
+  }
+  .hand-cover {
+    display: none;
+    width: 100%;
+    min-height: 140px;
+    border: 3px solid var(--gold);
+    border-radius: 18px;
+    background: linear-gradient(135deg, var(--orange), var(--orange-dark));
+    color: var(--text);
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(26px, 7vw, 48px);
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 10px;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.45), 0 12px 30px rgba(232,84,15,0.25);
+    cursor: pointer;
+    user-select: none;
+    padding: 20px;
+  }
+  .hand-cover .cover-sub {
+    font-family: 'Nunito', sans-serif;
+    font-size: 15px;
+    font-weight: 800;
+    color: rgba(255,248,239,0.9);
+  }
+  .hand-area.hand-hidden .hand-cover {
+    display: flex;
+  }
+  .hand-area.hand-hidden .hand-tiles {
+    display: none;
+  }
+
+  .hand-tiles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: flex-start;
+  }
+
+  .hand-separator {
+    width: 100%;
+    height: 1px;
+    background: rgba(255,255,255,0.08);
+    margin: 4px 0;
+  }
+
+  /* ─── TURN BANNER ─── */
+  .turn-banner {
+    background: linear-gradient(90deg, var(--orange-dark), var(--orange));
+    text-align: center;
+    padding: 6px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 15px;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+  }
+
+  /* ─── SCISSORS/TRASH MODE ─── */
+  .special-mode-bar {
+    display: none;
+    background: rgba(153,102,204,0.25);
+    border: 2px solid #9966cc;
+    border-radius: 12px;
+    margin: 6px 8px;
+    padding: 8px 12px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .special-mode-bar.active { display: flex; }
+  .special-mode-text {
+    font-weight: 800;
+    color: #cc99ff;
+    font-size: 14px;
+  }
+  .btn-cancel {
+    background: transparent;
+    border: 2px solid #9966cc;
+    color: #cc99ff;
+    border-radius: 8px;
+    padding: 4px 12px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  /* ─── ROUND END MODAL ─── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .modal-overlay.active { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border-radius: 24px;
+    padding: 28px 24px;
+    width: 100%;
+    max-width: 420px;
+    border: 2px solid var(--orange);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  }
+
+  .modal h2 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 28px;
+    color: var(--gold);
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .score-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+  .score-table th {
+    color: var(--text-dim);
+    font-size: 13px;
+    padding: 6px 8px;
+    text-align: left;
+    font-weight: 700;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .score-table td {
+    padding: 8px 8px;
+    font-weight: 700;
+    font-size: 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .score-table .winner-row td { color: var(--gold); }
+  .score-table .loser-row td { opacity: 0.7; }
+  .score-table .pts-col {
+    font-family: 'Fredoka One', cursive;
+    font-size: 20px;
+    text-align: right;
+  }
+  .score-table .total-col {
+    font-family: 'Fredoka One', cursive;
+    font-size: 18px;
+    text-align: right;
+    color: var(--text-dim);
+  }
+  .danger { color: #ff6666 !important; }
+
+  .modal .btn-primary { margin-top: 4px; }
+
+  /* ─── AI THINKING ─── */
+  .ai-thinking {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(45,26,8,0.95);
+    border: 2px solid var(--orange);
+    border-radius: 20px;
+    padding: 10px 20px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 18px;
+    color: var(--orange-light);
+    z-index: 50;
+    white-space: nowrap;
+  }
+  .ai-thinking.active { display: block; }
+  .ai-dot { animation: blink 1.2s infinite; }
+  .ai-dot:nth-child(2) { animation-delay: 0.2s; }
+  .ai-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink { 0%,80%,100%{opacity:0.2} 40%{opacity:1} }
+
+  /* ─── WINNER SCREEN ─── */
+  #winner-screen {
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+    gap: 24px;
+    text-align: center;
+  }
+  .winner-trophy { font-size: 80px; animation: bounce 1s infinite alternate; }
+  @keyframes bounce { from{transform:translateY(0)} to{transform:translateY(-10px)} }
+  .winner-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(36px, 10vw, 60px);
+    color: var(--gold);
+    text-shadow: 0 4px 0 var(--orange-dark);
+  }
+  .winner-name {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(28px, 8vw, 48px);
+    color: var(--orange-light);
+  }
+  .winner-reason { color: var(--text-dim); font-size: 16px; font-weight: 700; }
+
+  .final-scores {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 16px 20px;
+    width: 100%;
+    max-width: 360px;
+    border: 2px solid rgba(232,84,15,0.3);
+  }
+  .final-scores h3 {
+    font-family: 'Fredoka One', cursive;
+    color: var(--gold);
+    margin-bottom: 12px;
+    font-size: 18px;
+  }
+  .final-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    font-weight: 700;
+  }
+  .final-row .f-name { color: var(--text-dim); }
+  .final-row .f-pts { font-family: 'Fredoka One', cursive; font-size: 20px; color: var(--gold); }
+
+  /* ─── TOAST ─── */
+  .toast {
+    position: fixed;
+    top: 70px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-10px);
+    background: rgba(45,26,8,0.97);
+    border: 2px solid var(--orange);
+    color: var(--text);
+    border-radius: 12px;
+    padding: 10px 20px;
+    font-weight: 700;
+    font-size: 15px;
+    z-index: 200;
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--orange-dark); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<!-- SETUP SCREEN -->
+<div id="setup-screen" class="screen active">
+  <div class="logo">Restart<span>Lautapeli</span></div>
+
+  <div class="setup-card">
+    <h2>Pelaajat</h2>
+
+    <div class="count-row">
+      <label>Pelaajien määrä</label>
+      <div class="counter">
+        <button id="count-minus">−</button>
+        <div class="count-val" id="count-val">2</div>
+        <button id="count-plus">+</button>
+      </div>
+    </div>
+
+    <div id="player-rows"></div>
+  </div>
+
+  <button class="btn-primary" id="start-btn" style="max-width:420px;width:100%">Aloita peli ▶</button>
+</div>
+
+<!-- GAME SCREEN -->
+<div id="game-screen" class="screen">
+  <div class="game-header">
+    <div class="header-title">↺</div>
+    <div class="score-chips" id="score-chips"></div>
+    <button class="btn-icon" id="menu-btn" title="Valikko">≡</button>
+  </div>
+
+  <div class="turn-banner" id="turn-banner">Odota...</div>
+
+  <div class="special-mode-bar" id="special-bar">
+    <div class="special-mode-text" id="special-text">Valitse rivi</div>
+    <button class="btn-cancel" id="cancel-special">Peruuta</button>
+  </div>
+
+  <div class="board-area" id="board-area"></div>
+
+  <div class="board-hand-divider"></div>
+
+  <div class="hand-area" id="hand-area">
+    <button class="hand-cover" id="hand-cover" type="button">
+      <span id="hand-cover-title">Pelaaja 1</span>
+      <span class="cover-sub">Näytä käsi napauttamalla</span>
+    </button>
+    <div class="hand-header">
+      <div class="current-player-label">
+        <span class="name" id="hand-player-name">–</span>
+        <span class="tile-count" id="hand-tile-count"></span>
+      </div>
+      <div class="action-btns">
+        <button class="btn-play" id="btn-play">Pelaa ✓</button>
+        <button class="btn-pass" id="btn-pass">Passi</button>
+      </div>
+    </div>
+    <div class="hand-tiles" id="hand-tiles"></div>
+  </div>
+</div>
+
+<!-- WINNER SCREEN -->
+<div id="winner-screen" class="screen">
+  <div class="winner-trophy">🏆</div>
+  <div class="winner-title">Voittaja!</div>
+  <div class="winner-name" id="winner-name">–</div>
+  <div class="winner-reason" id="winner-reason"></div>
+  <div class="final-scores" id="final-scores"></div>
+  <button class="btn-primary" style="max-width:360px;width:100%" onclick="showScreen('setup-screen')">Uusi peli</button>
+</div>
+
+<!-- ROUND END MODAL -->
+<div class="modal-overlay" id="round-modal">
+  <div class="modal">
+    <h2 id="round-modal-title">Erä päättyi!</h2>
+    <table class="score-table" id="round-score-table"></table>
+    <button class="btn-primary" id="next-round-btn">Seuraava erä →</button>
+  </div>
+</div>
+
+<!-- AI THINKING -->
+<div class="ai-thinking" id="ai-thinking">
+  🤖 AI miettii<span class="ai-dot">.</span><span class="ai-dot">.</span><span class="ai-dot">.</span>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════
+//  GAME CONSTANTS
+// ═══════════════════════════════════════════
+
+const COLORS = ['red','green','blue','orange','black'];
+const COLOR_LABELS = { red:'Pun', green:'Vih', blue:'Sin', orange:'Ora', black:'Mus' };
+const COLOR_NAMES_FI = { red:'Punainen', green:'Vihreä', blue:'Sininen', orange:'Oranssi', black:'Musta' };
+
+// Tile types
+function makeTile(color, number) { return { color, number, type:'number' }; }
+function makeSpecial(color, type) { return { color, number: type==='fin'?16:0, type }; }
+function makeScissors() { return { color:'purple', number:0, type:'scissors' }; }
+function makeTrash()    { return { color:'purple', number:0, type:'trash' }; }
+
+function buildDeck() {
+  const deck = [];
+  for (const c of COLORS) {
+    for (let n=1; n<=15; n++) deck.push(makeTile(c,n));
+    deck.push(makeSpecial(c,'fin'));
+    deck.push(makeSpecial(c,'restart'));
+  }
+  deck.push(makeScissors());
+  deck.push(makeScissors());
+  deck.push(makeTrash());
+  return deck;
+}
+
+function shuffle(arr) {
+  for (let i=arr.length-1;i>0;i--) {
+    const j=Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+  return arr;
+}
+
+// ═══════════════════════════════════════════
+//  SETUP STATE
+// ═══════════════════════════════════════════
+
+let setupCount = 2;
+let playerConfigs = [
+  { name:'Pelaaja 1', ai:false },
+  { name:'Pelaaja 2', ai:false },
+  { name:'Pelaaja 3', ai:false },
+  { name:'Pelaaja 4', ai:true },
+];
+
+function renderPlayerRows() {
+  const container = document.getElementById('player-rows');
+  container.innerHTML = '';
+  for (let i=0; i<setupCount; i++) {
+    const cfg = playerConfigs[i];
+    const row = document.createElement('div');
+    row.className = 'player-row' + (cfg.ai?' ai-active':'');
+    row.id = `prow-${i}`;
+    row.innerHTML = `
+      <div class="player-num">${i+1}</div>
+      <input type="text" placeholder="Nimi ${i+1}" value="${cfg.name}" ${cfg.ai?'readonly':''} data-pi="${i}">
+      <span class="ai-badge">AI</span>
+      <label class="ai-toggle">
+        <input type="checkbox" ${cfg.ai?'checked':''} data-ai="${i}"> Tekoäly
+      </label>
+    `;
+    container.appendChild(row);
+    row.querySelector('input[type="text"]').addEventListener('input', e=>{
+      playerConfigs[parseInt(e.target.dataset.pi)].name = e.target.value;
+    });
+    row.querySelector('input[type="checkbox"]').addEventListener('change', e=>{
+      const pi = parseInt(e.target.dataset.ai);
+      playerConfigs[pi].ai = e.target.checked;
+      const prow = document.getElementById(`prow-${pi}`);
+      const nameInput = prow.querySelector('input[type="text"]');
+      if (e.target.checked) {
+        prow.classList.add('ai-active');
+        nameInput.readOnly = true;
+        if (!playerConfigs[pi].name || playerConfigs[pi].name === `Pelaaja ${pi+1}`) {
+          nameInput.value = `AI ${pi+1}`;
+          playerConfigs[pi].name = `AI ${pi+1}`;
+        }
+      } else {
+        prow.classList.remove('ai-active');
+        nameInput.readOnly = false;
+        if (!playerConfigs[pi].name || /^AI\s+\d+$/i.test(playerConfigs[pi].name.trim())) {
+          nameInput.value = `Pelaaja ${pi+1}`;
+          playerConfigs[pi].name = `Pelaaja ${pi+1}`;
+        }
+      }
+    });
+  }
+}
+
+document.getElementById('count-minus').onclick = () => {
+  if (setupCount > 2) { setupCount--; document.getElementById('count-val').textContent=setupCount; renderPlayerRows(); }
+};
+document.getElementById('count-plus').onclick = () => {
+  if (setupCount < 4) { setupCount++; document.getElementById('count-val').textContent=setupCount; renderPlayerRows(); }
+};
+
+renderPlayerRows();
+
+// ═══════════════════════════════════════════
+//  GAME STATE
+// ═══════════════════════════════════════════
+
+let G = {}; // global game state
+
+function initGame() {
+  const numPlayers = setupCount;
+  // Read actual names
+  const configs = playerConfigs.slice(0, numPlayers).map((cfg,i) => {
+    const inp = document.querySelector(`input[type="text"][data-pi="${i}"]`);
+    const name = inp ? inp.value.trim() || `Pelaaja ${i+1}` : cfg.name;
+    return { name, ai: cfg.ai };
+  });
+
+  G = {
+    players: configs.map((c,i) => ({
+      id: i,
+      name: c.name,
+      ai: c.ai,
+      hand: [],
+      totalScore: 0,
+    })),
+    rows: COLORS.map(c => ({ color:c, tiles:[], closed:false })),
+    currentPlayer: 0,
+    phase: 'play', // 'play' | 'scissors' | 'trash'
+    selectedTiles: [], // indices in hand
+    pendingSpecial: null, // 'scissors'|'trash'
+    passCount: 0,
+    round: 1,
+    handVisible: false,
+  };
+  dealRound();
+}
+
+function dealRound() {
+  const n = G.players.length;
+
+  // Reset rows and hands
+  G.rows = COLORS.map(c => ({ color:c, tiles:[], closed:false }));
+  for (const p of G.players) p.hand = [];
+
+  // Build and shuffle deck
+  let deck = shuffle(buildDeck());
+
+  if (n === 2) {
+    // Place 1s directly in rows, remove from deck
+    deck = deck.filter(t => !(t.type==='number' && t.number===1));
+    for (const c of COLORS) G.rows.find(r=>r.color===c).tiles.push(makeTile(c,1));
+    shuffle(deck);
+    for (let i=0; i<60; i++) G.players[i%2].hand.push(deck[i]);
+    G.currentPlayer = Math.floor(Math.random()*2);
+
+  } else if (n === 3) {
+    // Remove one random non-1 tile (87 remain)
+    const idx = deck.findIndex(t => !(t.type==='number' && t.number===1));
+    deck.splice(idx, 1);
+    shuffle(deck);
+    for (let i=0; i<87; i++) G.players[i%3].hand.push(deck[i]);
+    // Move 1s to rows, track red 1 owner
+    let firstPlayer = 0;
+    for (const p of G.players) {
+      for (const t of p.hand.filter(t=>t.type==='number'&&t.number===1)) {
+        if (t.color==='red') firstPlayer = p.id;
+        const row = G.rows.find(r=>r.color===t.color);
+        if (row && row.tiles.length===0) row.tiles.push(t);
+      }
+      p.hand = p.hand.filter(t=>!(t.type==='number'&&t.number===1));
+    }
+    G.currentPlayer = firstPlayer;
+
+  } else { // 4 players, 88 tiles exactly
+    for (let i=0; i<88; i++) G.players[i%4].hand.push(deck[i]);
+    // Move 1s to rows, track red 1 owner
+    let firstPlayer = 0;
+    for (const p of G.players) {
+      for (const t of p.hand.filter(t=>t.type==='number'&&t.number===1)) {
+        if (t.color==='red') firstPlayer = p.id;
+        const row = G.rows.find(r=>r.color===t.color);
+        if (row && row.tiles.length===0) row.tiles.push(t);
+      }
+      p.hand = p.hand.filter(t=>!(t.type==='number'&&t.number===1));
+    }
+    G.currentPlayer = firstPlayer;
+  }
+
+  G.selectedTiles = [];
+  G.pendingSpecial = null;
+  G.passCount = 0;
+  G.phase = 'play';
+  G.handVisible = false;
+}
+
+// ═══════════════════════════════════════════
+//  GAME LOGIC
+// ═══════════════════════════════════════════
+
+function currentPlayer() { return G.players[G.currentPlayer]; }
+
+// Get top tile of a row (what's effectively the "last" value)
+function rowTopValue(row) {
+  if (row.tiles.length === 0) return 0;
+  const last = row.tiles[row.tiles.length-1];
+  if (last.type === 'restart') return 0; // restart becomes 0 after placement
+  if (last.type === 'fin') return 16;
+  return last.number;
+}
+
+function rowEffectiveClosed(row) {
+  if (row.closed) return true;
+  if (row.tiles.length === 0) return false;
+  const last = row.tiles[row.tiles.length-1];
+  return last.type === 'fin';
+}
+
+// Can a sequence of tiles be played on a row?
+// FIN/RST: may be played alone at any time, or as the last tile of a consecutive sequence.
+function canPlayOnRow(tiles, row) {
+  if (tiles.length === 0) return false;
+  if (rowEffectiveClosed(row)) return false;
+
+  const playable = tiles.filter(t=>t.type==='number'||t.type==='fin'||t.type==='restart');
+  if (playable.length !== tiles.length) return false;
+  if (playable.some(t=>t.color !== row.color)) return false;
+
+  const specials = playable.filter(t=>t.type==='fin'||t.type==='restart');
+  if (specials.length > 1) return false;
+
+  const nums = playable.filter(t=>t.type==='number').sort((a,b)=>a.number-b.number);
+  const top = rowTopValue(row);
+
+  // Special tile alone: value 16, and it may be played regardless of the current row value
+  // as long as the row is not already closed. RST later becomes 0 on the row.
+  if (playable.length === 1 && specials.length === 1) return true;
+
+  // Number part: first number may jump, but must be greater than row top.
+  // Additional numbers placed during the same turn must be consecutive.
+  if (nums.length === 0) return false;
+  if (nums[0].number <= top) return false;
+  for (let i=1;i<nums.length;i++) {
+    if (nums[i].number !== nums[i-1].number + 1) return false;
+  }
+
+  // If FIN/RST is played after numbers, it is the 16 of the sequence,
+  // so the numeric sequence must end at 15.
+  if (specials.length === 1 && nums[nums.length-1].number !== 15) return false;
+
+  return true;
+}
+
+// Get valid rows for selected tiles
+function getValidRows() {
+  const selTiles = G.selectedTiles.map(i => currentPlayer().hand[i]);
+  if (selTiles.length === 0) return [];
+  return G.rows.map((row,i) => canPlayOnRow(selTiles, row) ? i : -1).filter(i=>i>=0);
+}
+
+// Play selected tiles on row
+function playTiles(rowIdx) {
+  const p = currentPlayer();
+  const selTiles = G.selectedTiles.map(i => p.hand[i]);
+  const row = G.rows[rowIdx];
+
+  // Handle restart becoming 0
+  for (const t of selTiles) {
+    if (t.type === 'restart') {
+      row.tiles.push({ ...t, effectiveValue: 0 });
+    } else {
+      row.tiles.push(t);
+    }
+  }
+
+  // Remove from hand (descending to preserve indices)
+  const sorted = [...G.selectedTiles].sort((a,b)=>b-a);
+  for (const i of sorted) p.hand.splice(i,1);
+
+  G.selectedTiles = [];
+  G.passCount = 0;
+
+  // Check win: empty hand
+  if (p.hand.length === 0) {
+    endGame('hand', p);
+    return;
+  }
+
+  nextTurn();
+}
+
+// Scissors: remove last tile from row
+function applyScissors(rowIdx) {
+  const row = G.rows[rowIdx];
+  if (row.tiles.length <= 1) { showToast('Ei voi poistaa!'); return; }
+  const last = row.tiles[row.tiles.length-1];
+  if (last.type==='number' && last.number===1) { showToast('1-laattaa ei voi poistaa!'); return; }
+  row.tiles.pop();
+  // closed state may be un-closed
+  row.closed = false;
+
+  // Remove scissors from hand
+  const p = currentPlayer();
+  const si = p.hand.findIndex(t=>t.type==='scissors');
+  if (si>=0) p.hand.splice(si,1);
+  G.pendingSpecial = null;
+  G.phase = 'play';
+  G.passCount = 0;
+  // Player may continue playing this turn
+  // Let them play another tile or pass
+  renderAll();
+}
+
+// Trash: clear row except 1
+function applyTrash(rowIdx) {
+  const row = G.rows[rowIdx];
+  const one = row.tiles[0]; // always the 1
+  row.tiles = [one];
+  row.closed = false;
+
+  const p = currentPlayer();
+  const ti = p.hand.findIndex(t=>t.type==='trash');
+  if (ti>=0) p.hand.splice(ti,1);
+  G.pendingSpecial = null;
+  G.phase = 'play';
+  G.passCount = 0;
+  renderAll();
+}
+
+function pass() {
+  G.selectedTiles = [];
+  G.pendingSpecial = null;
+  G.phase = 'play';
+  G.passCount++;
+
+  if (G.passCount >= G.players.length) {
+    endRound();
+    return;
+  }
+  nextTurn();
+}
+
+function nextTurn() {
+  G.currentPlayer = (G.currentPlayer+1) % G.players.length;
+  G.selectedTiles = [];
+  G.phase = 'play';
+  G.pendingSpecial = null;
+  G.handVisible = false;
+  renderAll();
+  if (currentPlayer().ai) {
+    scheduleAI();
+  }
+}
+
+// ═══════════════════════════════════════════
+//  TILE VALUE HELPER
+// ═══════════════════════════════════════════
+
+function tileScore(t) {
+  if (t.type==='number') return t.number;
+  if (t.type==='fin'||t.type==='restart') return 16;
+  return 20; // scissors, trash
+}
+
+// ═══════════════════════════════════════════
+//  END OF ROUND
+// ═══════════════════════════════════════════
+
+function endRound() {
+  // Score remaining tiles
+  for (const p of G.players) {
+    const pts = p.hand.reduce((s,t)=>s+tileScore(t),0);
+    p.roundScore = pts;
+    p.totalScore += pts;
+  }
+
+  // Check if anyone >= 100
+  const over100 = G.players.some(p=>p.totalScore>=100);
+
+  showRoundModal(over100);
+}
+
+function endGame(reason, winner) {
+  // Score remaining tiles for all other players
+  for (const p of G.players) {
+    const pts = p.hand.reduce((s,t)=>s+tileScore(t),0);
+    p.roundScore = pts;
+    p.totalScore += pts;
+  }
+  winner.roundScore = 0; // winner had empty hand
+
+  showWinner(winner, reason==='hand' ? 'Tyhjentänyt kätensä!' : 'Vähiten pisteitä!');
+}
+
+// ═══════════════════════════════════════════
+//  AI LOGIC
+// ═══════════════════════════════════════════
+
+function scheduleAI() {
+  document.getElementById('ai-thinking').classList.add('active');
+  setTimeout(doAITurn, 800 + Math.random()*600);
+}
+
+function doAITurn() {
+  document.getElementById('ai-thinking').classList.remove('active');
+  const p = currentPlayer();
+
+  // Try scissors first if useful (strategically)
+  // Simple heuristic: try to play longest possible sequence on any row
+  let bestPlay = null;
+
+  for (const [ri, row] of G.rows.entries()) {
+    if (rowEffectiveClosed(row)) continue;
+    const top = rowTopValue(row);
+    // Find consecutive tiles of this color in hand
+    const colorTiles = p.hand
+      .map((t,i)=>({t,i}))
+      .filter(({t})=>t.type==='number' && t.color===row.color && t.number>top)
+      .sort((a,b)=>a.t.number-b.t.number);
+
+    // Build longest consecutive chain starting from any number > top
+    let bestChain = [];
+    for (let si=0; si<colorTiles.length; si++) {
+      let chain = [];
+      let exp2 = colorTiles[si].t.number;
+      for (let ci=si; ci<colorTiles.length; ci++) {
+        if (colorTiles[ci].t.number===exp2) { chain.push(colorTiles[ci].i); exp2++; } else break;
+      }
+      if (chain.length > bestChain.length) bestChain = chain;
+    }
+    let chain = bestChain;
+    let expected = chain.length>0 ? p.hand[chain[chain.length-1]].number+1 : top+1;
+
+    // Can we append fin or restart?
+    const fin = p.hand.findIndex((t,ci)=>t.type==='fin' && t.color===row.color && !chain.includes(ci));
+    const rst = p.hand.findIndex((t,ci)=>t.type==='restart' && t.color===row.color && !chain.includes(ci));
+    // FIN/RST can be appended only as value 16 after 15.
+    if (fin>=0 && expected===16) {
+      // Optionally add fin at end – AI does it occasionally
+      if (Math.random()<0.3) chain.push(fin);
+    } else if (rst>=0 && expected===16) {
+      if (Math.random()<0.2) chain.push(rst);
+    }
+
+    if (chain.length>0) {
+      if (!bestPlay || chain.length>bestPlay.tiles.length) {
+        bestPlay = { rowIdx:ri, tiles:chain };
+      }
+    }
+  }
+
+  // Try FIN/RST alone. Rule: either may be played alone at any time on an open row.
+  if (!bestPlay) {
+    for (const [ri,row] of G.rows.entries()) {
+      if (rowEffectiveClosed(row)) continue;
+      const fin = p.hand.findIndex(t=>t.type==='fin'&&t.color===row.color);
+      const rst = p.hand.findIndex(t=>t.type==='restart'&&t.color===row.color);
+      if (fin>=0) { bestPlay = { rowIdx:ri, tiles:[fin] }; break; }
+      if (rst>=0) { bestPlay = { rowIdx:ri, tiles:[rst] }; break; }
+    }
+  }
+
+  // Try scissors if stuck
+  if (!bestPlay) {
+    const sc = p.hand.findIndex(t=>t.type==='scissors');
+    const tr = p.hand.findIndex(t=>t.type==='trash');
+    if (sc>=0) {
+      // Find a row where removing last tile helps
+      for (const [ri,row] of G.rows.entries()) {
+        if (row.tiles.length>1) {
+          const last = row.tiles[row.tiles.length-1];
+          if (last.type==='number'&&last.number!==1) {
+            // Check if removing it helps
+            const newTop = row.tiles.length>=2 ? (row.tiles[row.tiles.length-2].type==='restart'?0:row.tiles[row.tiles.length-2].number) : 0;
+            const colorTiles = p.hand.filter(t=>t.type==='number'&&t.color===row.color&&t.number>newTop);
+            if (colorTiles.length>0) {
+              applyScissors(ri);
+              setTimeout(()=>doAITurn(),400);
+              return;
+            }
+          }
+        }
+      }
+    }
+    if (tr>=0) {
+      // Find a closed or high row
+      const ri = G.rows.findIndex(r=>r.tiles.length>2&&!rowEffectiveClosed(r));
+      if (ri>=0) {
+        applyTrash(ri);
+        setTimeout(()=>doAITurn(),400);
+        return;
+      }
+    }
+  }
+
+  if (bestPlay) {
+    G.selectedTiles = bestPlay.tiles;
+    playTiles(bestPlay.rowIdx);
+  } else {
+    pass();
+  }
+}
+
+// ═══════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function revealHand() {
+  if (currentPlayer().ai) return;
+  G.handVisible = true;
+  renderAll();
+}
+
+function hideHand() {
+  G.handVisible = false;
+  G.selectedTiles = [];
+  G.phase = 'play';
+  G.pendingSpecial = null;
+  renderAll();
+}
+
+function renderAll() {
+  renderScoreChips();
+  renderBoard();
+  renderHand();
+  renderTurnBanner();
+}
+
+function renderScoreChips() {
+  const el = document.getElementById('score-chips');
+  el.innerHTML = G.players.map((p,i)=>`
+    <div class="score-chip ${i===G.currentPlayer?'current':''}">
+      ${p.ai?'<span class="ai-icon">🤖</span>':''}
+      <span class="chip-name">${p.name}</span>
+      <span class="chip-pts">${p.totalScore}</span>
+    </div>
+  `).join('');
+}
+
+function tileDOMStr(tile, classes='', extraStyle='') {
+  const colorCls = tile.type==='scissors'||tile.type==='trash' ? 'tile-purple' : `tile-${tile.color}`;
+  let inner = '';
+  if (tile.type==='number') inner=`<span class="tile-val">${tile.number}</span>`;
+  else if (tile.type==='fin') inner=`<span class="tile-val">16</span><span class="tile-sub">FIN</span>`;
+  else if (tile.type==='restart') inner=`<span class="tile-val">16↺</span><span class="tile-sub">RST</span>`;
+  else if (tile.type==='scissors') inner=`<span class="tile-val">✂️</span>`;
+  else if (tile.type==='trash') inner=`<span class="tile-val">🗑️</span>`;
+  return `<div class="tile ${colorCls} tile-${tile.type} ${classes}" style="${extraStyle}">${inner}</div>`;
+}
+
+function renderBoard() {
+  const el = document.getElementById('board-area');
+  const validRows = G.phase==='play' && G.selectedTiles.length>0 ? getValidRows() : [];
+  const specialRows = G.phase==='scissors'||G.phase==='trash' ? G.rows.map((_,i)=>i) : [];
+
+  el.innerHTML = G.rows.map((row,ri)=>{
+    const isValid = validRows.includes(ri);
+    const isSpecialTarget = G.phase==='scissors'&&row.tiles.length>1 ||
+                            G.phase==='trash'&&row.tiles.length>1;
+    const closed = rowEffectiveClosed(row);
+
+    let tilesHTML = row.tiles.map(t=>{
+      // Show restart as 0 if it's placed
+      if (t.type==='restart') {
+        const colorCls=`tile-${t.color}`;
+        return `<div class="tile ${colorCls} tile-restart tiny"><span class="tile-val">0↺</span></div>`;
+      }
+      return tileDOMStr(t,'tiny','');
+    }).join('');
+
+    return `
+      <div class="row-container ${isValid||isSpecialTarget?'valid-target':''} ${closed?'row-closed':''}"
+           data-row="${ri}"
+           onclick="onRowClick(${ri})">
+        <div class="row-label">${COLOR_LABELS[row.color]}</div>
+        <div class="tile-row">${tilesHTML}</div>
+        ${closed?'<span class="closed-badge">suljettu</span>':''}
+        ${(isValid||isSpecialTarget)?`<button class="row-play-btn">▶</button>`:''}
+      </div>
+    `;
+  }).join('');
+}
+
+function renderHand() {
+  const p = currentPlayer();
+  const handArea = document.getElementById('hand-area');
+  const cover = document.getElementById('hand-cover');
+  const coverTitle = document.getElementById('hand-cover-title');
+  document.getElementById('hand-player-name').textContent = p.name + (p.ai?'🤖':'');
+  document.getElementById('hand-tile-count').textContent = `${p.hand.length} laattaa`;
+  coverTitle.textContent = `Pelaaja ${p.id + 1}`;
+  cover.onclick = revealHand;
+
+  const el = document.getElementById('hand-tiles');
+
+  if (!p.ai && !G.handVisible) {
+    handArea.classList.add('hand-hidden');
+    el.innerHTML = '';
+    document.getElementById('btn-play').classList.remove('visible');
+    document.getElementById('btn-pass').style.display='none';
+    renderSpecialBar();
+    return;
+  }
+
+  handArea.classList.remove('hand-hidden');
+
+  if (p.ai) {
+    // Show hidden hand for AI
+    el.innerHTML = '<div style="color:var(--text-dim);font-weight:700;padding:8px">🤖 AI miettii siirtoaan...</div>';
+    document.getElementById('btn-play').classList.remove('visible');
+    document.getElementById('btn-pass').style.display='none';
+    renderSpecialBar();
+    return;
+  }
+
+  document.getElementById('btn-pass').style.display='';
+
+  // Group: special tiles first, then by color
+  const hand = p.hand;
+  const specials = hand.map((t,i)=>({t,i})).filter(({t})=>t.type==='scissors'||t.type==='trash');
+  const numbered = hand.map((t,i)=>({t,i})).filter(({t})=>t.type!=='scissors'&&t.type!=='trash');
+
+  // Sort numbered by color then value
+  numbered.sort((a,b)=>{
+    const ci = COLORS.indexOf(a.t.color)-COLORS.indexOf(b.t.color);
+    if (ci!==0) return ci;
+    const av = a.t.type==='number'?a.t.number:(a.t.type==='fin'?16:17);
+    const bv = b.t.type==='number'?b.t.number:(b.t.type==='fin'?16:17);
+    return av-bv;
+  });
+
+  const validRows = G.selectedTiles.length>0 ? getValidRows() : null;
+
+  function isSelectable(idx) {
+    if (G.phase==='scissors'||G.phase==='trash') return false;
+    const t = hand[idx];
+    if (t.type==='scissors'||t.type==='trash') return true; // handled separately
+    return true;
+  }
+
+  function isDisabled(idx) {
+    if (G.selectedTiles.length===0) return false;
+    // Check if adding this tile still makes a valid sequence
+    const t = hand[idx];
+    if (t.type==='scissors'||t.type==='trash') return true;
+    const sel = G.selectedTiles;
+    if (sel.includes(idx)) return false;
+    // Must be same color as selected
+    const firstT = hand[sel[0]];
+    if ((firstT.type==='number'||firstT.type==='fin'||firstT.type==='restart') &&
+        (t.type==='number'||t.type==='fin'||t.type==='restart') &&
+        firstT.color !== t.color) return true;
+    // Check if new selection would be valid
+    const newSel = [...sel, idx].sort((a,b)=>{
+      const av = hand[a].type==='number'?hand[a].number:16;
+      const bv = hand[b].type==='number'?hand[b].number:16;
+      return av-bv;
+    });
+    const newTiles = newSel.map(i=>hand[i]);
+    // Must form consecutive series
+    if (!isConsecutive(newTiles)) return true;
+    // Must be valid on at least one row
+    return !G.rows.some(row=>canPlayOnRow(newTiles,row));
+  }
+
+  function isConsecutive(tiles) {
+    if (tiles.length===0) return false;
+    const playable = tiles.filter(t=>t.type==='number'||t.type==='fin'||t.type==='restart');
+    if (playable.length<tiles.length) return false;
+    const color = playable[0].color;
+    for (const t of playable) if (t.color!==color) return false;
+
+    const specials = playable.filter(t=>t.type==='fin'||t.type==='restart');
+    if (specials.length > 1) return false;
+    if (playable.length === 1 && specials.length === 1) return true;
+
+    const nums = playable.filter(t=>t.type==='number').sort((a,b)=>a.number-b.number);
+    if (nums.length === 0) return false;
+    for (let i=1;i<nums.length;i++) if (nums[i].number!==nums[i-1].number+1) return false;
+    if (specials.length===1 && nums[nums.length-1].number!==15) return false;
+    return true;
+  }
+
+  let html = '';
+
+  // Special tiles
+  if (specials.length>0) {
+    html += specials.map(({t,i})=>{
+      const colorCls='tile-purple';
+      const inner = t.type==='scissors'?'✂️':'🗑️';
+      return `<div class="tile ${colorCls} tile-${t.type} small selectable" 
+        onclick="onSpecialClick(${i})" 
+        title="${t.type==='scissors'?'Leikkaa viimeinen laatta pois':'Tyhjennä rivi'}"
+      ><span class="tile-val">${inner}</span></div>`;
+    }).join('');
+    html += '<div class="hand-separator"></div>';
+  }
+
+  // Numbered tiles
+  let prevColor = null;
+  for (const {t,i} of numbered) {
+    if (prevColor!==null && t.color!==prevColor) {
+      html += '<div class="hand-separator"></div>';
+    }
+    prevColor = t.color;
+    const colorCls = `tile-${t.color}`;
+    const sel = G.selectedTiles.includes(i);
+    const dis = isDisabled(i);
+    let inner='';
+    if (t.type==='number') inner=`<span class="tile-val">${t.number}</span>`;
+    else if (t.type==='fin') inner=`<span class="tile-val">16</span><span class="tile-sub">FIN</span>`;
+    else if (t.type==='restart') inner=`<span class="tile-val">16↺</span><span class="tile-sub">RST</span>`;
+    html+=`<div class="tile ${colorCls} tile-${t.type} small selectable ${sel?'selected':''} ${dis?'disabled':''}"
+      onclick="onTileClick(${i})">${inner}</div>`;
+  }
+
+  el.innerHTML = html;
+
+  // Show/hide play button
+  const playBtn = document.getElementById('btn-play');
+  if (G.selectedTiles.length>0 && validRows && validRows.length>0) {
+    playBtn.classList.add('visible');
+  } else {
+    playBtn.classList.remove('visible');
+  }
+
+  renderSpecialBar();
+}
+
+function renderSpecialBar() {
+  const bar = document.getElementById('special-bar');
+  const txt = document.getElementById('special-text');
+  if (G.phase==='scissors') {
+    bar.classList.add('active');
+    txt.textContent = '✂️ Valitse rivi, jolta poistat viimeisen laatan';
+  } else if (G.phase==='trash') {
+    bar.classList.add('active');
+    txt.textContent = '🗑️ Valitse rivi, jolta tyhjennetään kaikki paitsi 1';
+  } else {
+    bar.classList.remove('active');
+  }
+}
+
+function renderTurnBanner() {
+  const p = currentPlayer();
+  const banner = document.getElementById('turn-banner');
+  banner.textContent = `${p.ai?'🤖 ':''}${p.name}n vuoro`;
+}
+
+// ═══════════════════════════════════════════
+//  CLICK HANDLERS
+// ═══════════════════════════════════════════
+
+function onTileClick(idx) {
+  if (currentPlayer().ai || !G.handVisible) return;
+  if (G.phase==='scissors'||G.phase==='trash') return;
+
+  const t = currentPlayer().hand[idx];
+  // Deselect if already selected
+  if (G.selectedTiles.includes(idx)) {
+    G.selectedTiles = G.selectedTiles.filter(i=>i!==idx);
+    renderHand();
+    renderBoard();
+    return;
+  }
+
+  // Add to selection if valid
+  const newSel = [...G.selectedTiles, idx];
+  const tiles = newSel.map(i=>currentPlayer().hand[i]);
+
+  // Check consecutive
+  if (newSel.length > 1) {
+    if (!isConsecutiveTiles(tiles)) { showToast('Vain peräkkäisiä laattoja!'); return; }
+  }
+  // Check at least one valid row
+  if (!G.rows.some(r=>canPlayOnRow(tiles,r))) {
+    showToast('Ei sopivaa riviä!');
+    return;
+  }
+
+  G.selectedTiles = newSel;
+  renderHand();
+  renderBoard();
+}
+
+function isConsecutiveTiles(tiles) {
+  if (tiles.length===0) return false;
+  const color = tiles[0].color;
+  for (const t of tiles) {
+    if (t.color!==color) return false;
+    if (t.type!=='number'&&t.type!=='fin'&&t.type!=='restart') return false;
+  }
+
+  const specials = tiles.filter(t=>t.type==='fin'||t.type==='restart');
+  if (specials.length > 1) return false;
+  if (tiles.length === 1 && specials.length === 1) return true;
+
+  const nums = tiles.filter(t=>t.type==='number').sort((a,b)=>a.number-b.number);
+  if (nums.length === 0) return false;
+  for (let i=1;i<nums.length;i++) if (nums[i].number!==nums[i-1].number+1) return false;
+
+  // FIN/RST is value 16 when played as part of a sequence, so the sequence must end 15, FIN/RST.
+  if (specials.length===1 && nums[nums.length-1].number!==15) return false;
+  return true;
+}
+
+function onSpecialClick(idx) {
+  if (currentPlayer().ai || !G.handVisible) return;
+  const t = currentPlayer().hand[idx];
+
+  // Can only use if we can remove from at least one row
+  if (t.type==='scissors') {
+    const canUse = G.rows.some(r=>r.tiles.length>1 && !(r.tiles[r.tiles.length-1].type==='number'&&r.tiles[r.tiles.length-1].number===1));
+    if (!canUse) { showToast('Ei voi käyttää nyt!'); return; }
+    G.phase='scissors';
+    G.selectedTiles=[];
+  } else if (t.type==='trash') {
+    const canUse = G.rows.some(r=>r.tiles.length>1);
+    if (!canUse) { showToast('Ei voi käyttää nyt!'); return; }
+    G.phase='trash';
+    G.selectedTiles=[];
+  }
+  renderHand();
+  renderBoard();
+}
+
+function onRowClick(ri) {
+  if (G.phase==='scissors') {
+    const row=G.rows[ri];
+    if (row.tiles.length<=1) { showToast('Rivi on tyhjä!'); return; }
+    const last=row.tiles[row.tiles.length-1];
+    if (last.type==='number'&&last.number===1) { showToast('1-laattaa ei voi poistaa!'); return; }
+    applyScissors(ri);
+    return;
+  }
+  if (G.phase==='trash') {
+    const row=G.rows[ri];
+    if (row.tiles.length<=1) { showToast('Rivi on jo tyhjä!'); return; }
+    applyTrash(ri);
+    return;
+  }
+  if (G.selectedTiles.length>0) {
+    const vr=getValidRows();
+    if (vr.includes(ri)) {
+      playTiles(ri);
+    } else {
+      showToast('Et voi pelata tähän riviin!');
+    }
+  }
+}
+
+document.getElementById('btn-play').onclick = () => {
+  if (!currentPlayer().ai && !G.handVisible) return;
+  const vr = getValidRows();
+  if (vr.length===1) playTiles(vr[0]);
+  else if (vr.length>1) showToast('Valitse rivi klikkaamalla ▶');
+};
+
+document.getElementById('btn-pass').onclick = () => {
+  if (!currentPlayer().ai && !G.handVisible) return;
+  if (G.phase==='scissors'||G.phase==='trash') {
+    G.phase='play';
+    G.selectedTiles=[];
+    renderAll();
+    return;
+  }
+  G.selectedTiles=[];
+  pass();
+};
+
+document.getElementById('cancel-special').onclick = () => {
+  G.phase='play';
+  G.selectedTiles=[];
+  renderAll();
+};
+
+document.getElementById('menu-btn').onclick = () => {
+  if (confirm('Palata päävalikkoon? Peli menetetään.')) {
+    showScreen('setup-screen');
+  }
+};
+
+// ═══════════════════════════════════════════
+//  MODALS
+// ═══════════════════════════════════════════
+
+function showRoundModal(gameOver) {
+  const title = document.getElementById('round-modal-title');
+  const table = document.getElementById('round-score-table');
+  title.textContent = gameOver ? '🏁 Peli päättyy!' : `Erä ${G.round} päättyi!`;
+
+  const sorted = [...G.players].sort((a,b)=>a.totalScore-b.totalScore);
+
+  table.innerHTML = `
+    <tr>
+      <th>Pelaaja</th>
+      <th style="text-align:right">+Pisteet</th>
+      <th style="text-align:right">Yhteensä</th>
+    </tr>
+    ${G.players.map(p=>{
+      const over = p.totalScore>=100;
+      return `<tr class="${over?'loser-row':''}">
+        <td>${p.ai?'🤖 ':''}${p.name}</td>
+        <td class="pts-col">+${p.roundScore}</td>
+        <td class="total-col ${over?'danger':''}">${p.totalScore}${over?' ⚠️':''}</td>
+      </tr>`;
+    }).join('')}
+  `;
+
+  const nextBtn = document.getElementById('next-round-btn');
+  if (gameOver) {
+    nextBtn.textContent='Tulokset →';
+    nextBtn.onclick = () => {
+      document.getElementById('round-modal').classList.remove('active');
+      const winner = G.players.reduce((a,b)=>a.totalScore<b.totalScore?a:b);
+      showWinner(winner,'Vähiten pisteitä!');
+    };
+  } else {
+    nextBtn.textContent=`Erä ${G.round+1} →`;
+    nextBtn.onclick = () => {
+      document.getElementById('round-modal').classList.remove('active');
+      G.round++;
+      dealRound();
+      renderAll();
+      if (currentPlayer().ai) scheduleAI();
+    };
+  }
+
+  document.getElementById('round-modal').classList.add('active');
+}
+
+function showWinner(winner, reason) {
+  document.getElementById('winner-name').textContent=(winner.ai?'🤖 ':'')+winner.name;
+  document.getElementById('winner-reason').textContent=reason;
+
+  const fs = document.getElementById('final-scores');
+  const sorted = [...G.players].sort((a,b)=>a.totalScore-b.totalScore);
+  fs.innerHTML = `<h3>Lopputulos</h3>` + sorted.map((p,i)=>`
+    <div class="final-row">
+      <span class="f-name">${i===0?'🥇 ':i===1?'🥈 ':i===2?'🥉 ':''}${p.ai?'🤖 ':''}${p.name}</span>
+      <span class="f-pts">${p.totalScore} p</span>
+    </div>
+  `).join('');
+
+  showScreen('winner-screen');
+}
+
+// ═══════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════
+
+let toastTimer=null;
+function showToast(msg) {
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('show'),2200);
+}
+
+// ═══════════════════════════════════════════
+//  START GAME
+// ═══════════════════════════════════════════
+
+document.getElementById('start-btn').onclick = () => {
+  initGame();
+  showScreen('game-screen');
+  renderAll();
+  if (currentPlayer().ai) scheduleAI();
+};
+
+// ═══════════════════════════════════════════
+//  PWA SERVICE WORKER
+// ═══════════════════════════════════════════
+
+if ('serviceWorker' in navigator) {
+  const swCode = `
+    const CACHE='restart-v3-hand-cover-labels';
+    self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['.']))));
+    self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));
+  `;
+  const blob = new Blob([swCode],{type:'application/javascript'});
+  const swUrl = URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl).catch(()=>{});
+}
+</script>
+</body>
+</html>
