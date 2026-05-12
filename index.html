@@ -761,139 +761,65 @@
      Tavoite: 5 pöytäriviä + koko näkyvä käsi mahtuvat yhtä aikaa ilman pystyscrollia.
   */
   @media (min-width: 700px) and (orientation: landscape) {
-    .game-header {
-      min-height: 38px;
-      padding: 4px 10px;
-    }
-    .header-title {
-      font-size: 22px;
-    }
-    .score-chip {
-      padding: 2px 8px;
-      font-size: 12px;
-      border-width: 1.5px;
-    }
-    .score-chip .chip-pts {
-      font-size: 14px;
-    }
-    .turn-banner {
-      min-height: 26px;
-      padding: 3px 6px;
-      font-size: 14px;
-    }
-    .special-mode-bar {
-      margin: 3px 8px;
-      padding: 4px 10px;
-      min-height: 30px;
-    }
 
-    .board-area {
-      padding: 4px 8px;
-      gap: 2px;
-      overflow-y: hidden;
-      flex: 0 0 auto;
-    }
-    .row-container {
-      min-height: 38px;
-      gap: 4px;
-    }
-    .row-label {
-      width: 38px;
-      min-width: 38px;
-      font-size: 13px;
-    }
-    .tile-row {
-      gap: 3px;
-    }
-    .tile.tiny {
-      width: 30px;
-      height: 30px;
-      font-size: 12px;
-      border-radius: 6px;
-      box-shadow: 0 2px 0 rgba(0,0,0,0.5);
-    }
-    .tile-restart.tiny {
-      font-size: 9px;
-    }
-    .row-play-btn {
-      width: 30px;
-      height: 30px;
-      font-size: 16px;
-    }
-    .closed-badge {
-      font-size: 10px;
-      padding: 1px 6px;
-    }
-
-    .board-hand-divider {
-      height: 2px;
-      margin: 0 8px;
-    }
-
-    .hand-area {
-      padding: 4px 8px 6px;
-      max-height: none;
-      overflow-y: hidden;
-      flex: 0 0 auto;
-    }
-    .hand-header {
-      min-height: 32px;
-      margin-bottom: 4px;
-    }
-    .current-player-label .name {
-      font-size: 17px;
-    }
-    .current-player-label .tile-count {
-      font-size: 12px;
-    }
-    .btn-pass,
-    .btn-play {
-      padding: 5px 14px;
-      font-size: 14px;
-      border-radius: 8px;
-    }
-    .hand-tiles {
-      gap: 3px;
-    }
-    .hand-separator {
-      height: 2px;
-      margin: 1px 0;
-    }
-    .tile.small {
-      width: 32px;
-      height: 32px;
-      font-size: 13px;
-      border-radius: 7px;
-      box-shadow: 0 2px 0 rgba(0,0,0,0.5);
-    }
-    .tile-scissors,
-    .tile-trash {
-      font-size: 18px;
-    }
-    .tile .tile-sub {
-      font-size: 7px;
-    }
-    .tile.selectable:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 0 rgba(0,0,0,0.5);
-    }
-    .tile.selected {
-      transform: translateY(-3px);
-      box-shadow: 0 5px 0 rgba(0,0,0,0.5), 0 0 0 2px var(--gold);
-    }
-
-    .hand-cover {
-      min-height: 96px;
-      padding: 12px;
-      font-size: 34px;
-      border-radius: 16px;
-    }
-    .hand-cover .cover-sub {
-      font-size: 13px;
-    }
+  .board-area{
+    flex: 0 0 320px;
+    overflow: hidden;
+    padding: 8px 10px;
+    gap: 8px;
   }
 
-  /* ─── SCROLLBAR ─── */
+  .row-container{
+    min-height: 54px;
+    gap: 6px;
+  }
+
+  .row-label{
+    width: 46px;
+    min-width: 46px;
+    font-size: 16px;
+  }
+
+  .tile.tiny{
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+
+  .hand-area{
+    flex: 1;
+    overflow: hidden;
+    padding: 6px 10px 8px;
+    max-height: none;
+  }
+
+  .hand-tiles{
+    gap: 4px;
+  }
+
+  .hand-separator{
+    margin: 0;
+    opacity: 0.35;
+  }
+
+  .tile.small{
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+
+  .current-player-label .name{
+    font-size: 18px;
+  }
+
+  .btn-pass,
+  .btn-play{
+    padding: 6px 14px;
+    font-size: 14px;
+  }
+}
+
+/* ─── SCROLLBAR ─── */
   ::-webkit-scrollbar { width: 4px; height: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--orange-dark); border-radius: 4px; }
