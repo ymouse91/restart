@@ -1892,15 +1892,9 @@ document.getElementById('start-btn').onclick = () => {
 //  PWA SERVICE WORKER
 // ═══════════════════════════════════════════
 
+// Korvaa nykyinen SW-koodi tällä:
 if ('serviceWorker' in navigator) {
-  const swCode = `
-    const CACHE='restart-v4-ipad-compact-full-hand';
-    self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['.']))));
-    self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));
-  `;
-  const blob = new Blob([swCode],{type:'application/javascript'});
-  const swUrl = URL.createObjectURL(blob);
-  navigator.serviceWorker.register(swUrl).catch(()=>{});
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
 }
 </script>
 </body>
