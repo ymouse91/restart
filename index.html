@@ -1175,7 +1175,12 @@ function getValidRows() {
 // Play selected tiles on row
 function playTiles(rowIdx) {
   const p = currentPlayer();
-  const selTiles = G.selectedTiles.map(i => p.hand[i]);
+  const selTiles = G.selectedTiles.map(i => p.hand[i])
+    .sort((a,b) => {
+      const av = a.type==='number' ? a.number : 16;
+      const bv = b.type==='number' ? b.number : 16;
+      return av - bv;
+    });
   const row = G.rows[rowIdx];
 
   // Handle restart becoming 0
