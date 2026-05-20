@@ -1175,12 +1175,12 @@ function getValidRows() {
 // Play selected tiles on row
 function playTiles(rowIdx) {
   const p = currentPlayer();
-  const selTiles = G.selectedTiles.map(i => p.hand[i])
-    .sort((a,b) => {
-      const av = a.type==='number' ? a.number : 16;
-      const bv = b.type==='number' ? b.number : 16;
-      return av - bv;
-    });
+
+  // Selected tiles may have been clicked in either direction. Always place
+  // them in their actual play order: 2,3,4...15, FIN/RST.
+  const selTiles = G.selectedTiles
+    .map(i => p.hand[i])
+    .sort((a, b) => tileScore(a) - tileScore(b));
   const row = G.rows[rowIdx];
 
   // Handle restart becoming 0
@@ -1564,27 +1564,32 @@ function renderHand() {
 
   function isDisabled(idx) {
     if (G.selectedTiles.length===0) return false;
-    // Check if adding this tile still makes a valid sequence
     const t = hand[idx];
     if (t.type==='scissors'||t.type==='trash') return true;
     const sel = G.selectedTiles;
     if (sel.includes(idx)) return false;
+
     // Must be same color as selected
     const firstT = hand[sel[0]];
     if ((firstT.type==='number'||firstT.type==='fin'||firstT.type==='restart') &&
         (t.type==='number'||t.type==='fin'||t.type==='restart') &&
         firstT.color !== t.color) return true;
-    // Check if new selection would be valid
-    const newSel = [...sel, idx].sort((a,b)=>{
-      const av = hand[a].type==='number'?hand[a].number:16;
-      const bv = hand[b].type==='number'?hand[b].number:16;
-      return av-bv;
-    });
-    const newTiles = newSel.map(i=>hand[i]);
-    // Must form consecutive series
-    if (!isConsecutive(newTiles)) return true;
-    // Must be valid on at least one row
-    return !G.rows.some(row=>canPlayOnRow(newTiles,row));
+
+    // Compute current selection's numeric range
+    const selNums = sel.map(i=>hand[i]).filter(t=>t.type==='number').map(t=>t.number);
+    if (selNums.length === 0) return true;
+    const selMin = Math.min(...selNums);
+    const selMax = Math.max(...selNums);
+
+    // Tile must be a direct consecutive neighbor (one step below min or above max)
+    if (t.type === 'number') {
+      return t.number !== selMin - 1 && t.number !== selMax + 1;
+    }
+    // FIN/RST only selectable if selMax === 15
+    if (t.type === 'fin' || t.type === 'restart') {
+      return selMax !== 15;
+    }
+    return true;
   }
 
   function isConsecutive(tiles) {
@@ -1680,9 +1685,15 @@ function onTileClick(idx) {
   if (G.phase==='scissors'||G.phase==='trash') return;
 
   const t = currentPlayer().hand[idx];
-  // Deselect if already selected
+  // Deselect if already selected. If the user removes a tile from the
+  // middle of a consecutive selection, also remove everything after it so
+  // the remaining selection is still a valid uninterrupted run.
   if (G.selectedTiles.includes(idx)) {
-    G.selectedTiles = G.selectedTiles.filter(i=>i!==idx);
+    const clickedValue = tileScore(t);
+    G.selectedTiles = G.selectedTiles.filter(i => {
+      const selectedTile = currentPlayer().hand[i];
+      return tileScore(selectedTile) < clickedValue;
+    });
     renderHand();
     renderBoard();
     return;
