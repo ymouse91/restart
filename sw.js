@@ -1,4 +1,4 @@
-const CACHE = 'restart-v6';  // ← päivitä tätä kun muutat pelin koodia
+const CACHE = 'restart-v7';  // ← päivitä tätä kun muutat pelin koodia
 
 self.addEventListener('install', e =>
   e.waitUntil(
