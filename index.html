@@ -316,6 +316,15 @@
     transition: transform 0.15s, box-shadow 0.15s;
     border: 2px solid rgba(255,255,255,0.1);
   }
+  .tile::after {
+    content: '';
+    position: absolute;
+    inset: -5px;
+    border: 4px solid transparent;
+    border-radius: inherit;
+    pointer-events: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
 
   .tile.small {
     width: 40px; height: 40px;
@@ -362,13 +371,24 @@
   .tile.selectable {
     cursor: pointer;
   }
-  .tile.selectable:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 0 rgba(0,0,0,0.5);
+  @media (hover: hover) and (pointer: fine) {
+    .tile.selectable:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 0 rgba(0,0,0,0.5);
+    }
   }
   .tile.selected {
     transform: translateY(-6px);
-    box-shadow: 0 8px 0 rgba(0,0,0,0.5), 0 0 0 3px var(--gold);
+    box-shadow: 0 8px 0 rgba(0,0,0,0.5), 0 0 16px rgba(245,200,66,0.5);
+    z-index: 2;
+  }
+  .tile.selected::after {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 2px rgba(26,15,5,0.9), 0 0 14px rgba(245,200,66,0.65);
+  }
+  .tile.selectable.selected:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 8px 0 rgba(0,0,0,0.5), 0 0 16px rgba(245,200,66,0.5);
   }
   .tile.selectable.disabled {
     opacity: 0.4;
@@ -378,6 +398,10 @@
   .tile.selectable.disabled:hover {
     transform: none;
     box-shadow: var(--tile-shadow);
+  }
+  .tile.selectable.disabled::after {
+    border-color: transparent;
+    box-shadow: none;
   }
 
   /* Row target highlight */
