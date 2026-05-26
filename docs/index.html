@@ -988,7 +988,7 @@
 <!-- GAME SCREEN -->
 <div id="game-screen" class="screen">
   <div class="game-header">
-    <div class="header-title">↺ 1.3</div>
+    <div class="header-title">↺ 1.4</div>
     <div class="score-chips" id="score-chips"></div>
     <button class="btn-icon" id="menu-btn" title="Valikko">≡</button>
   </div>
@@ -1056,6 +1056,7 @@
 // ═══════════════════════════════════════════
 
 const COLORS = ['red','green','blue','orange','black'];
+const SAVE_KEY = 'restart-game-state-v1';
 const COLOR_LABELS = { red:'Pun', green:'Vih', blue:'Sin', orange:'Ora', black:'Mus' };
 const COLOR_NAMES_FI = { red:'Punainen', green:'Vihreä', blue:'Sininen', orange:'Oranssi', black:'Musta' };
 
@@ -1157,6 +1158,50 @@ renderPlayerRows();
 
 let G = {}; // global game state
 
+function hasActiveGame() {
+  return Array.isArray(G.players) && Array.isArray(G.rows) && G.players.length > 0;
+}
+
+function saveGame() {
+  if (!hasActiveGame()) return;
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ savedAt: Date.now(), game: G }));
+  } catch (err) {
+    console.warn('Tallennus ei onnistunut', err);
+  }
+}
+
+function clearSavedGame() {
+  try {
+    localStorage.removeItem(SAVE_KEY);
+  } catch (err) {}
+}
+
+function restoreSavedGame() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return false;
+    const parsed = JSON.parse(raw);
+    const saved = parsed && parsed.game;
+    if (!saved || !Array.isArray(saved.players) || !Array.isArray(saved.rows)) return false;
+
+    G = saved;
+    G.selectedTiles = [];
+    G.pendingSpecial = null;
+    G.phase = 'play';
+    G.handVisible = false;
+    G.lastPlayedTiles = Array.isArray(G.lastPlayedTiles) ? G.lastPlayedTiles : [];
+    showScreen('game-screen');
+    renderAll();
+    if (G.modal && G.modal.type === 'round') showRoundModal(G.modal.gameOver);
+    if (currentPlayer().ai) scheduleAI();
+    return true;
+  } catch (err) {
+    clearSavedGame();
+    return false;
+  }
+}
+
 function initGame() {
   const numPlayers = setupCount;
   // Read actual names
@@ -1183,6 +1228,7 @@ function initGame() {
     passCount: 0,
     round: 1,
     handVisible: false,
+    modal: null,
   };
   dealRound();
 }
@@ -1244,6 +1290,7 @@ function dealRound() {
   G.passCount = 0;
   G.phase = 'play';
   G.handVisible = false;
+  G.modal = null;
 }
 
 // ═══════════════════════════════════════════
@@ -1589,6 +1636,7 @@ function renderAll() {
   renderBoard();
   renderHand();
   renderTurnBanner();
+  saveGame();
 }
 
 function renderScoreChips() {
@@ -1953,6 +2001,8 @@ document.getElementById('cancel-special').onclick = () => {
 
 document.getElementById('menu-btn').onclick = () => {
   if (confirm('Palata päävalikkoon? Peli menetetään.')) {
+    clearSavedGame();
+    G = {};
     showScreen('setup-screen');
   }
 };
@@ -1962,6 +2012,7 @@ document.getElementById('menu-btn').onclick = () => {
 // ═══════════════════════════════════════════
 
 function showRoundModal(gameOver) {
+  G.modal = { type: 'round', gameOver };
   const title = document.getElementById('round-modal-title');
   const table = document.getElementById('round-score-table');
   title.textContent = gameOver ? '🏁 Peli päättyy!' : `Erä ${G.round} päättyi!`;
@@ -1996,6 +2047,7 @@ function showRoundModal(gameOver) {
     nextBtn.textContent=`Erä ${G.round+1} →`;
     nextBtn.onclick = () => {
       document.getElementById('round-modal').classList.remove('active');
+      G.modal = null;
       G.round++;
       dealRound();
       renderAll();
@@ -2004,6 +2056,7 @@ function showRoundModal(gameOver) {
   }
 
   document.getElementById('round-modal').classList.add('active');
+  saveGame();
 }
 
 function showWinner(winner, reason) {
@@ -2020,6 +2073,7 @@ function showWinner(winner, reason) {
   `).join('');
 
   showScreen('winner-screen');
+  clearSavedGame();
 }
 
 // ═══════════════════════════════════════════
@@ -2040,11 +2094,27 @@ function showToast(msg) {
 // ═══════════════════════════════════════════
 
 document.getElementById('start-btn').onclick = () => {
+  clearSavedGame();
   initGame();
   showScreen('game-screen');
   renderAll();
   if (currentPlayer().ai) scheduleAI();
 };
+
+window.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden' && hasActiveGame()) {
+    G.handVisible = false;
+    G.selectedTiles = [];
+    G.phase = 'play';
+    G.pendingSpecial = null;
+    saveGame();
+  } else if (document.visibilityState === 'visible' && hasActiveGame()) {
+    renderAll();
+  }
+});
+
+window.addEventListener('pagehide', saveGame);
+window.addEventListener('DOMContentLoaded', restoreSavedGame);
 
 // ═══════════════════════════════════════════
 //  PWA SERVICE WORKER
