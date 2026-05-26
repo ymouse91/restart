@@ -1,4 +1,4 @@
-const CACHE = 'restart-v11';
+const CACHE = 'restart-v12';
 const ASSETS = [
   './',
   './index.html',
