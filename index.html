@@ -249,7 +249,7 @@
   .game-header {
     background: var(--surface);
     border-bottom: 2px solid rgba(232,84,15,0.25);
-    padding: 8px 12px;
+    padding: calc(8px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) 8px calc(12px + env(safe-area-inset-left));
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -925,7 +925,7 @@
   .hand-area{
     flex: 1;
     overflow: hidden;
-    padding: 6px 10px 8px;
+    padding: 6px calc(10px + env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) calc(10px + env(safe-area-inset-left));
     max-height: none;
   }
 
@@ -988,7 +988,7 @@
 <!-- GAME SCREEN -->
 <div id="game-screen" class="screen">
   <div class="game-header">
-    <div class="header-title">↺ 1.4</div>
+    <div class="header-title">↺ 1.5</div>
     <div class="score-chips" id="score-chips"></div>
     <button class="btn-icon" id="menu-btn" title="Valikko">≡</button>
   </div>
