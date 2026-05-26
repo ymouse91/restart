@@ -1,10 +1,12 @@
-const CACHE = 'restart-v9';
+const CACHE = 'restart-v10';
 const ASSETS = [
   './',
   './index.html',
   './manifest.webmanifest',
   './icon-192.png',
-  './icon-512.png'
+  './icon-512.png',
+  './fonts/fredoka-one-latin.woff2',
+  './fonts/nunito-latin.woff2'
 ];
 
 self.addEventListener('install', e =>
